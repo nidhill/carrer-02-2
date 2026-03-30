@@ -61,7 +61,7 @@ const Admin = () => {
             tab === "template" ? "bg-foreground text-background" : "bg-muted text-foreground"
           }`}
         >
-          PDF Template
+          Upload PDF
         </button>
       </div>
 

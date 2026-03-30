@@ -14,7 +14,7 @@ const AdminLogin = () => {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      toast.error("Invalid credentials");
+      toast.error(error.message);
     } else {
       navigate("/admin");
     }

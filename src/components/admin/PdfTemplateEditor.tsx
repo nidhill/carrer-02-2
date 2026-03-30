@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { generateCareerPdf, PdfSection } from "@/lib/generatePdf";
-import { Plus, Eye, Save, Trash2, GripVertical } from "lucide-react";
+import { Save } from "lucide-react";
 
 const PdfTemplateEditor = () => {
   const [templateId, setTemplateId] = useState<string | null>(null);
-  const [title, setTitle] = useState("Career OS — Your Playbook");
-  const [sections, setSections] = useState<PdfSection[]>([]);
   const [driveLink, setDriveLink] = useState("");
+  const [uploadingPdf, setUploadingPdf] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,8 +19,6 @@ const PdfTemplateEditor = () => {
         .single();
       if (data) {
         setTemplateId(data.id);
-        setTitle(data.title);
-        setSections(data.sections as unknown as PdfSection[]);
         setDriveLink((data as any).drive_link || "");
       }
       setLoading(false);
@@ -30,122 +26,77 @@ const PdfTemplateEditor = () => {
     fetchTemplate();
   }, []);
 
-  const updateSection = (index: number, field: keyof PdfSection, value: any) => {
-    const updated = [...sections];
-    (updated[index] as any)[field] = value;
-    setSections(updated);
-  };
-
-  const addSection = () => {
-    setSections([...sections, { heading: "New Section", body: "", visible: true }]);
-  };
-
-  const removeSection = (index: number) => {
-    setSections(sections.filter((_, i) => i !== index));
-  };
-
   const handleSave = async () => {
     if (!templateId) return;
     const { error } = await supabase
       .from("pdf_template")
-      .update({ title, sections: sections as any, drive_link: driveLink } as any)
+      .update({ drive_link: driveLink } as any)
       .eq("id", templateId);
     if (error) toast.error("Failed to save");
-    else toast.success("Template saved!");
+    else toast.success("File saved! Users will now download this file.");
   };
 
-  const handlePreview = () => {
-    const doc = generateCareerPdf("John Doe", title, sections);
-    const blob = doc.output("blob");
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank");
-  };
-
-  if (loading) return <p className="text-muted-foreground">Loading template...</p>;
+  if (loading) return <p className="text-muted-foreground">Loading settings...</p>;
 
   return (
     <div className="space-y-6">
-      {/* Google Drive Link */}
+      {/* PDF Upload */}
       <div>
-        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1 block">
-          Google Drive Download Link
+        <label className="text-3xl font-bold text-foreground mb-4 block">
+          Playbook PDF File
         </label>
-        <input
-          type="url"
-          value={driveLink}
-          onChange={(e) => setDriveLink(e.target.value)}
-          className="pill-input !text-left"
-          placeholder="https://drive.google.com/file/d/FILE_ID/view?usp=sharing"
-        />
-        <p className="text-xs text-muted-foreground mt-1 ml-4">
-          Paste a Google Drive sharing link. It will auto-convert to a direct download link for users.
+        <div className="flex flex-col gap-2">
+          {driveLink ? (
+            <div className="flex items-center gap-2">
+              <input type="url" value={driveLink} readOnly className="pill-input !text-left bg-muted flex-1" />
+              <button 
+                onClick={() => setDriveLink("")} 
+                className="rounded-full border border-destructive text-destructive px-4 py-2 text-sm font-semibold hover:bg-destructive hover:text-white transition-colors"
+                type="button"
+              >
+                Remove
+              </button>
+            </div>
+          ) : (
+            <label className="flex items-center gap-2 cursor-pointer btn-accent-sm w-max !py-2 !px-4 hover:opacity-90">
+              {uploadingPdf ? "Uploading..." : "Select PDF File"}
+              <input 
+                type="file" 
+                accept="application/pdf" 
+                className="hidden" 
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setUploadingPdf(true);
+                  try {
+                    const fileName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+                    const { data, error } = await supabase.storage.from("pdfs").upload(fileName, file);
+                    if (error) throw error;
+                    
+                    const { data: publicUrlData } = supabase.storage.from("pdfs").getPublicUrl(fileName);
+                    setDriveLink(publicUrlData.publicUrl);
+                    toast.success("PDF uploaded successfully! Click Save below to apply.");
+                  } catch (err: any) {
+                    toast.error("Upload failed: " + err.message);
+                  } finally {
+                    setUploadingPdf(false);
+                    e.target.value = "";
+                  }
+                }}
+                disabled={uploadingPdf}
+              />
+            </label>
+          )}
+        </div>
+        <p className="text-sm text-muted-foreground mt-2">
+          Upload the PDF file directly to Supabase. This exact file will be downloaded by the users when they register.
         </p>
       </div>
 
-      {/* Title */}
-      <div>
-        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1 block">
-          PDF Title
-        </label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="pill-input !text-left"
-        />
-      </div>
-
-      {/* Sections */}
-      <div className="space-y-4">
-        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Sections
-        </label>
-        {sections.map((section, i) => (
-          <div key={i} className="bg-card rounded-2xl border p-5 space-y-3">
-            <div className="flex items-center gap-3">
-              <GripVertical className="w-4 h-4 text-muted-foreground" />
-              <input
-                type="text"
-                value={section.heading}
-                onChange={(e) => updateSection(i, "heading", e.target.value)}
-                className="flex-1 bg-transparent font-semibold text-lg focus:outline-none border-b border-transparent focus:border-foreground"
-                placeholder="Section heading"
-              />
-              <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={section.visible}
-                  onChange={(e) => updateSection(i, "visible", e.target.checked)}
-                  className="accent-accent w-4 h-4"
-                />
-                Visible
-              </label>
-              <button onClick={() => removeSection(i)} className="text-destructive hover:text-destructive/80">
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-            <textarea
-              value={section.body}
-              onChange={(e) => updateSection(i, "body", e.target.value)}
-              rows={4}
-              className="w-full bg-muted/50 rounded-xl px-4 py-3 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-foreground"
-              placeholder="Section content..."
-            />
-          </div>
-        ))}
-      </div>
-
-      <button onClick={addSection} className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors">
-        <Plus className="w-4 h-4" /> Add Section
-      </button>
-
       {/* Actions */}
-      <div className="flex gap-3">
-        <button onClick={handlePreview} className="rounded-full border border-foreground px-6 py-3 font-semibold flex items-center gap-2 hover:bg-foreground hover:text-background transition-colors">
-          <Eye className="w-4 h-4" /> Preview PDF
-        </button>
+      <div className="flex gap-3 pt-6 border-t mt-6">
         <button onClick={handleSave} className="btn-accent-sm flex items-center gap-2 !py-3 !px-6 !text-base">
-          <Save className="w-4 h-4" /> Save Template
+          <Save className="w-4 h-4" /> Save Playbook File
         </button>
       </div>
     </div>

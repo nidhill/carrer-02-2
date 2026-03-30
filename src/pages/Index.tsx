@@ -2,7 +2,8 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-function extractGoogleDriveDownloadUrl(link: string): string | null {
+function getDownloadUrl(link: string): string | null {
+  if (!link) return null;
   // Match /file/d/FILE_ID/ pattern
   const match = link.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
   if (match) {
@@ -10,7 +11,13 @@ function extractGoogleDriveDownloadUrl(link: string): string | null {
   }
   // Already a direct download link
   if (link.includes("export=download")) return link;
-  return null;
+  
+  // Supabase Storage Link
+  if (link.includes("supabase.co/storage")) {
+    return link.includes("?") ? `${link}&download=CareerOS%20bY%20rIZMANGO.pdf` : `${link}?download=CareerOS%20bY%20rIZMANGO.pdf`;
+  }
+  
+  return link;
 }
 
 const Index = () => {
@@ -48,11 +55,13 @@ const Index = () => {
         .single();
 
       const driveLink = (template as any)?.drive_link || "";
-      const downloadUrl = driveLink ? extractGoogleDriveDownloadUrl(driveLink) : null;
+      const downloadUrl = getDownloadUrl(driveLink);
 
       if (downloadUrl) {
-        // Open Google Drive auto-download link
-        window.open(downloadUrl, "_blank");
+        // Because this runs after an 'await', browsers like Chrome/Safari will block 
+        // a.click() or window.open() as "popups". 
+        // Setting location.href is safe and will just trigger the download in the current window!
+        window.location.href = downloadUrl;
       } else {
         toast.info("Registration saved! The playbook will be available soon.");
       }
