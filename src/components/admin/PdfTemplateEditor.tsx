@@ -8,6 +8,7 @@ const PdfTemplateEditor = () => {
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [title, setTitle] = useState("Career OS — Your Playbook");
   const [sections, setSections] = useState<PdfSection[]>([]);
+  const [driveLink, setDriveLink] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,6 +23,7 @@ const PdfTemplateEditor = () => {
         setTemplateId(data.id);
         setTitle(data.title);
         setSections(data.sections as unknown as PdfSection[]);
+        setDriveLink((data as any).drive_link || "");
       }
       setLoading(false);
     };
@@ -46,7 +48,7 @@ const PdfTemplateEditor = () => {
     if (!templateId) return;
     const { error } = await supabase
       .from("pdf_template")
-      .update({ title, sections: sections as any })
+      .update({ title, sections: sections as any, drive_link: driveLink } as any)
       .eq("id", templateId);
     if (error) toast.error("Failed to save");
     else toast.success("Template saved!");
@@ -63,6 +65,23 @@ const PdfTemplateEditor = () => {
 
   return (
     <div className="space-y-6">
+      {/* Google Drive Link */}
+      <div>
+        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1 block">
+          Google Drive Download Link
+        </label>
+        <input
+          type="url"
+          value={driveLink}
+          onChange={(e) => setDriveLink(e.target.value)}
+          className="pill-input !text-left"
+          placeholder="https://drive.google.com/file/d/FILE_ID/view?usp=sharing"
+        />
+        <p className="text-xs text-muted-foreground mt-1 ml-4">
+          Paste a Google Drive sharing link. It will auto-convert to a direct download link for users.
+        </p>
+      </div>
+
       {/* Title */}
       <div>
         <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1 block">
