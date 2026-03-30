@@ -1,0 +1,1 @@
+ALTER TABLE public.pdf_template ADD COLUMN drive_link TEXT DEFAULT '';

@@ -16,18 +16,21 @@ export type Database = {
     Tables: {
       pdf_template: {
         Row: {
+          drive_link: string | null
           id: string
           sections: Json
           title: string
           updated_at: string
         }
         Insert: {
+          drive_link?: string | null
           id?: string
           sections?: Json
           title?: string
           updated_at?: string
         }
         Update: {
+          drive_link?: string | null
           id?: string
           sections?: Json
           title?: string
