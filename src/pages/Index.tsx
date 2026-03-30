@@ -1,7 +1,17 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { generateCareerPdf, PdfSection } from "@/lib/generatePdf";
 import { toast } from "sonner";
+
+function extractGoogleDriveDownloadUrl(link: string): string | null {
+  // Match /file/d/FILE_ID/ pattern
+  const match = link.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (match) {
+    return `https://drive.google.com/uc?export=download&id=${match[1]}`;
+  }
+  // Already a direct download link
+  if (link.includes("export=download")) return link;
+  return null;
+}
 
 const Index = () => {
   const [name, setName] = useState("");
@@ -29,7 +39,7 @@ const Index = () => {
 
       if (error) throw error;
 
-      // Fetch latest PDF template
+      // Fetch latest PDF template for the Drive link
       const { data: template } = await supabase
         .from("pdf_template")
         .select("*")
@@ -37,13 +47,15 @@ const Index = () => {
         .limit(1)
         .single();
 
-      const title = template?.title || "Career OS — Your Playbook";
-      const sections: PdfSection[] = (template?.sections as unknown as PdfSection[]) || [
-        { heading: "Introduction", body: "Welcome to Career OS.", visible: true },
-      ];
+      const driveLink = (template as any)?.drive_link || "";
+      const downloadUrl = driveLink ? extractGoogleDriveDownloadUrl(driveLink) : null;
 
-      const doc = generateCareerPdf(name.trim(), title, sections);
-      doc.save("Career-OS-Playbook.pdf");
+      if (downloadUrl) {
+        // Open Google Drive auto-download link
+        window.open(downloadUrl, "_blank");
+      } else {
+        toast.info("Registration saved! The playbook will be available soon.");
+      }
 
       toast.success("You're in! Your playbook is downloading.");
       setName("");
