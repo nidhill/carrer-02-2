@@ -14,7 +14,7 @@ function getDownloadUrl(link: string): string | null {
   
   // Supabase Storage Link
   if (link.includes("supabase.co/storage")) {
-    return link.includes("?") ? `${link}&download=CareerOS%20bY%20rIZMANGO.pdf` : `${link}?download=CareerOS%20bY%20rIZMANGO.pdf`;
+    return link.includes("?") ? `${link}&download=CareerOS%20by%20RizMango.pdf` : `${link}?download=CareerOS%20by%20RizMango.pdf`;
   }
   
   return link;
