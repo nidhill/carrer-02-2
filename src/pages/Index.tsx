@@ -115,13 +115,18 @@ const Index = () => {
             onChange={(e) => setEmail(e.target.value)}
             className="pill-input"
           />
-          <input
-            type="text"
-            placeholder="I am"
+          <select
             value={iam}
             onChange={(e) => setIam(e.target.value)}
-            className="pill-input"
-          />
+            className="pill-input appearance-none"
+            style={{ textAlignLast: "center" }}
+          >
+            <option value="" disabled>I am</option>
+            <option value="12th Graduate -- looking to start a career" className="bg-background text-foreground text-left">12th Graduate -- looking to start a career</option>
+            <option value="Degree Graduate -- looking to start a career" className="bg-background text-foreground text-left">Degree Graduate -- looking to start a career</option>
+            <option value="Parent -- looking to learn about careers for children" className="bg-background text-foreground text-left">Parent -- looking to learn about careers for children</option>
+            <option value="Working Professional -- planning career switch" className="bg-background text-foreground text-left">Working Professional -- planning career switch</option>
+          </select>
           <button type="submit" disabled={loading} className="btn-accent mt-2">
             {loading ? "SENDING..." : "GET MY PAID SKILLS BLUEPRINT"}
           </button>
