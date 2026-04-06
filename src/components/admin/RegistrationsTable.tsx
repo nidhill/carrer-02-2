@@ -9,6 +9,7 @@ interface Registration {
   name: string;
   phone: string;
   email: string;
+  role?: string | null;
   created_at: string;
 }
 
@@ -72,9 +73,9 @@ const RegistrationsTable = () => {
   };
 
   const exportCsv = () => {
-    const header = "Name,Phone,Email,Date Registered\n";
+    const header = "Name,Phone,Email,I Am,Date Registered\n";
     const rows = registrations
-      .map((r) => `"${r.name}","${r.phone}","${r.email}","${new Date(r.created_at).toLocaleDateString()}"`)
+      .map((r) => `"${r.name}","${r.phone}","${r.email}","${r.role || ""}","${new Date(r.created_at).toLocaleDateString()}"`)
       .join("\n");
     const blob = new Blob([header + rows], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -117,6 +118,7 @@ const RegistrationsTable = () => {
                 <th className="px-4 py-3 font-semibold">Full Name</th>
                 <th className="px-4 py-3 font-semibold hidden sm:table-cell">Phone</th>
                 <th className="px-4 py-3 font-semibold">Email</th>
+                <th className="px-4 py-3 font-semibold hidden md:table-cell">I am</th>
                 <th className="px-4 py-3 font-semibold hidden sm:table-cell">Date</th>
                 <th className="px-4 py-3 font-semibold">Actions</th>
               </tr>
@@ -133,6 +135,7 @@ const RegistrationsTable = () => {
                     <td className="px-4 py-3 font-medium">{r.name}</td>
                     <td className="px-4 py-3 hidden sm:table-cell">{r.phone}</td>
                     <td className="px-4 py-3">{r.email}</td>
+                    <td className="px-4 py-3 hidden md:table-cell">{r.role || "-"}</td>
                     <td className="px-4 py-3 hidden sm:table-cell">
                       {new Date(r.created_at).toLocaleDateString()}
                     </td>
@@ -153,6 +156,7 @@ const RegistrationsTable = () => {
                             <p><strong>Name:</strong> {r.name}</p>
                             <p><strong>Phone:</strong> {r.phone}</p>
                             <p><strong>Email:</strong> {r.email}</p>
+                            <p><strong>I am:</strong> {r.role || "N/A"}</p>
                             <p><strong>Registered:</strong> {new Date(r.created_at).toLocaleString()}</p>
                           </div>
                           <div className="flex gap-2">

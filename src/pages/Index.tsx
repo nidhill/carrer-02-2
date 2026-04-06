@@ -24,6 +24,7 @@ const Index = () => {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [iam, setIam] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,7 +43,7 @@ const Index = () => {
       // Save registration
       const { error } = await supabase
         .from("registrations")
-        .insert({ name: name.trim(), phone: phone.trim(), email: email.trim() });
+        .insert({ name: name.trim(), phone: phone.trim(), email: email.trim(), role: iam.trim() });
 
       if (error) throw error;
 
@@ -70,6 +71,7 @@ const Index = () => {
       setName("");
       setPhone("");
       setEmail("");
+      setIam("");
     } catch (err: any) {
       toast.error(err.message || "Something went wrong");
     } finally {
@@ -80,13 +82,13 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative">
       {/* Logo */}
-      <p className="absolute top-6 left-6 sm:top-8 sm:left-10 text-xs font-light tracking-widest text-foreground/60 uppercase">
-        RizMango
+      <p className="absolute top-6 left-6 sm:top-8 sm:left-10 text-xs font-light tracking-widest text-foreground uppercase">
+        RIZMANGO
       </p>
 
       <div className="w-full max-w-2xl flex flex-col items-center gap-10">
         {/* Title */}
-        <h1 className="text-6xl sm:text-8xl font-black text-center leading-none tracking-tight">
+        <h1 className="text-6xl sm:text-8xl font-black text-center leading-none">
           Career OS
         </h1>
 
@@ -113,8 +115,15 @@ const Index = () => {
             onChange={(e) => setEmail(e.target.value)}
             className="pill-input"
           />
+          <input
+            type="text"
+            placeholder="I am"
+            value={iam}
+            onChange={(e) => setIam(e.target.value)}
+            className="pill-input"
+          />
           <button type="submit" disabled={loading} className="btn-accent mt-2">
-            {loading ? "SENDING..." : "GET MY CAREER PLAYBOOK"}
+            {loading ? "SENDING..." : "GET MY PAID SKILLS BLUEPRINT"}
           </button>
         </form>
       </div>
